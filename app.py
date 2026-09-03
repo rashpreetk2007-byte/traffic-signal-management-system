@@ -2,61 +2,59 @@ import streamlit as st
 import time
 import random
 
-# ============================================================
-# TRAFFIC SIGNAL MANAGEMENT SYSTEM
-# Created By: Rashpreet Kaur Arora
-# 20 FEATURES PROJECT
-# Hardware: NOT REQUIRED
-# Streamlit Version
-# ============================================================
-
 st.set_page_config(
     page_title="Traffic Signal Management System",
     page_icon="🚦",
-    layout="wide",
-    initial_sidebar_state="expanded"
+    layout="wide"
 )
 
 # ============================================================
 # SESSION STATE
 # ============================================================
 
-defaults = {
-    "signal": "RED",
-    "running": True,
-    "last_change": time.time(),
-    "vehicle_count": 45,
-    "emergency": False,
-    "pedestrian": False,
-    "night_mode": False,
-    "manual_mode": False,
-    "accident": False,
-    "wrong_way": False,
-    "school_zone": False,
-    "congestion": False,
-    "green_time": 10,
-    "yellow_time": 4,
-    "red_time": 10
-}
+if "signal" not in st.session_state:
+    st.session_state.signal = "RED"
 
-for key, value in defaults.items():
-    if key not in st.session_state:
-        st.session_state[key] = value
+if "running" not in st.session_state:
+    st.session_state.running = True
+
+if "last_change" not in st.session_state:
+    st.session_state.last_change = time.time()
+
+if "vehicle_count" not in st.session_state:
+    st.session_state.vehicle_count = 45
+
+if "emergency" not in st.session_state:
+    st.session_state.emergency = False
+
+if "pedestrian" not in st.session_state:
+    st.session_state.pedestrian = False
+
+if "night_mode" not in st.session_state:
+    st.session_state.night_mode = False
+
+if "school_zone" not in st.session_state:
+    st.session_state.school_zone = False
 
 
 # ============================================================
-# FUNCTIONS
+# SIGNAL TIMING
 # ============================================================
 
-def get_duration():
+RED_TIME = 10
+YELLOW_TIME = 4
+GREEN_TIME = 10
 
-    if st.session_state.signal == "GREEN":
-        return st.session_state.green_time
+
+def get_time():
+
+    if st.session_state.signal == "RED":
+        return RED_TIME
 
     if st.session_state.signal == "YELLOW":
-        return st.session_state.yellow_time
+        return YELLOW_TIME
 
-    return st.session_state.red_time
+    return GREEN_TIME
 
 
 def next_signal():
@@ -73,213 +71,310 @@ def next_signal():
     st.session_state.last_change = time.time()
 
 
-def calculate_density():
+# ============================================================
+# AUTOMATIC SIGNAL
+# ============================================================
 
-    count = st.session_state.vehicle_count
+duration = get_time()
 
-    if count < 30:
-        return "LOW"
+elapsed = int(time.time() - st.session_state.last_change)
 
-    elif count < 70:
-        return "MEDIUM"
+remaining = max(duration - elapsed, 0)
 
-    return "HIGH"
+if st.session_state.running and not st.session_state.emergency:
 
-
-def adaptive_timing():
-
-    count = st.session_state.vehicle_count
-
-    if count >= 90:
-        st.session_state.green_time = 20
-
-    elif count >= 70:
-        st.session_state.green_time = 16
-
-    elif count >= 40:
-        st.session_state.green_time = 12
-
-    else:
-        st.session_state.green_time = 8
-
-
-def signal_color():
-
-    if st.session_state.signal == "RED":
-        return "RED"
-
-    if st.session_state.signal == "YELLOW":
-        return "YELLOW"
-
-    return "GREEN"
+    if remaining <= 0:
+        next_signal()
+        st.rerun()
 
 
 # ============================================================
-# PAGE CSS
+# ACTIVE CLASS
+# ============================================================
+
+red_active = ""
+yellow_active = ""
+green_active = ""
+
+if st.session_state.signal == "RED":
+    red_active = "active"
+
+elif st.session_state.signal == "YELLOW":
+    yellow_active = "active"
+
+else:
+    green_active = "active"
+
+
+# ============================================================
+# CSS
 # ============================================================
 
 st.markdown("""
 <style>
 
-.stApp {
-    background: #eef2f7;
+body {
+    background-color: #eef2f7;
 }
 
 .main-title {
     text-align: center;
     font-size: 38px;
     font-weight: 900;
-    margin-top: 10px;
-    margin-bottom: 4px;
+    margin-bottom: 5px;
 }
 
 .subtitle {
     text-align: center;
     font-size: 18px;
-    margin-bottom: 5px;
-}
-
-.creator {
-    text-align: center;
-    font-size: 17px;
-    font-weight: 700;
+    font-weight: 600;
     margin-bottom: 20px;
 }
 
-.dashboard-card {
-    background: white;
-    padding: 20px;
-    border-radius: 18px;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+/* =========================================================
+   TRAFFIC SIGNAL OUTER BODY
+   ========================================================= */
+
+.traffic-container {
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    margin-top: 10px;
     margin-bottom: 15px;
 }
 
-.status-card {
-    text-align: center;
-    background: white;
-    padding: 18px;
-    border-radius: 18px;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
-}
+.traffic-box {
 
-.traffic-body {
-    width: 190px;
-    padding: 20px 20px 25px 20px;
-    margin: 15px auto;
-    border-radius: 35px;
+    width: 210px;
+
     background: linear-gradient(
         145deg,
-        #080808,
-        #252525,
-        #101010
+        #050505,
+        #202020,
+        #080808
     );
 
-    border: 6px solid #444;
+    border: 7px solid #444;
+
+    border-radius: 35px;
+
+    padding: 18px 20px 25px 20px;
 
     box-shadow:
-        0 15px 40px rgba(0,0,0,0.55),
-        inset 0 0 25px rgba(255,255,255,0.05);
+        0 15px 35px rgba(0,0,0,0.45),
+        inset 0 0 20px rgba(255,255,255,0.08);
 }
 
-.traffic-light {
-    width: 90px;
-    height: 90px;
-    border-radius: 50%;
-    margin: 16px auto;
+/* =========================================================
+   SIMPLE LIGHT SYSTEM
+   ========================================================= */
 
-    background:
-        radial-gradient(
-            circle at 35% 30%,
-            #555,
-            #181818 60%,
-            #050505
-        );
+.light {
+
+    text-align: center;
+
+    margin: 7px 0;
+
+    padding: 3px;
+
+}
+
+.circle {
+
+    width: 92px;
+    height: 92px;
+
+    margin: auto;
+
+    border-radius: 50%;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    font-size: 70px;
+
+    line-height: 92px;
+
+    color: #222;
+
+    background: #151515;
 
     border: 5px solid #333;
 
     box-shadow:
-        inset 0 0 20px #000,
-        0 3px 8px rgba(0,0,0,0.6);
-
-    transition: all 0.3s ease;
+        inset 0 0 18px #000;
 }
 
-.red-active {
+/* =========================================================
+   RED
+   ========================================================= */
+
+.circle.red {
+    color: #350000;
+}
+
+.light.active .circle.red {
+
+    color: #ff2020;
+
     background:
         radial-gradient(
-            circle at 35% 30%,
-            #ffaaaa,
-            #ff1b1b 45%,
-            #9b0000 80%
+            circle,
+            #ffb0b0 0%,
+            #ff2222 38%,
+            #a80000 72%,
+            #420000 100%
         );
 
     box-shadow:
-        0 0 12px #ff0000,
-        0 0 30px #ff0000,
-        0 0 60px rgba(255,0,0,0.85),
-        0 0 100px rgba(255,0,0,0.5);
+        0 0 15px #ff0000,
+        0 0 35px #ff0000,
+        0 0 65px rgba(255,0,0,0.8);
 }
 
-.yellow-active {
+/* =========================================================
+   YELLOW
+   ========================================================= */
+
+.circle.yellow {
+    color: #3d3500;
+}
+
+.light.active .circle.yellow {
+
+    color: #ffe600;
+
     background:
         radial-gradient(
-            circle at 35% 30%,
-            #fff5a0,
-            #ffd000 45%,
-            #9c7800 80%
+            circle,
+            #fff9a0 0%,
+            #ffe000 38%,
+            #b18c00 72%,
+            #4a3900 100%
         );
 
     box-shadow:
-        0 0 12px #ffd000,
-        0 0 30px #ffd000,
-        0 0 60px rgba(255,210,0,0.85),
-        0 0 100px rgba(255,210,0,0.5);
+        0 0 15px #ffd900,
+        0 0 35px #ffd900,
+        0 0 65px rgba(255,210,0,0.8);
 }
 
-.green-active {
+/* =========================================================
+   GREEN
+   ========================================================= */
+
+.circle.green {
+    color: #003d18;
+}
+
+.light.active .circle.green {
+
+    color: #00ff5a;
+
     background:
         radial-gradient(
-            circle at 35% 30%,
-            #a5ffbe,
-            #00df52 45%,
-            #00752b 80%
+            circle,
+            #b5ffc9 0%,
+            #00ed55 38%,
+            #008c35 72%,
+            #003d18 100%
         );
 
     box-shadow:
-        0 0 12px #00ff55,
-        0 0 30px #00ff55,
-        0 0 60px rgba(0,255,80,0.85),
-        0 0 100px rgba(0,255,80,0.5);
+        0 0 15px #00ff55,
+        0 0 35px #00ff55,
+        0 0 65px rgba(0,255,80,0.8);
 }
 
-.signal-name {
-    color: white;
-    text-align: center;
-    font-size: 18px;
+/* =========================================================
+   LABEL
+   ========================================================= */
+
+.light-name {
+
+    color: #aaa;
+
+    font-size: 13px;
+
     font-weight: 800;
+
     letter-spacing: 2px;
+
+    margin-top: 2px;
+}
+
+.light.active .light-name {
+
+    color: white;
+
+    font-weight: 900;
+}
+
+/* =========================================================
+   STATUS
+   ========================================================= */
+
+.signal-status {
+
+    text-align: center;
+
+    font-size: 30px;
+
+    font-weight: 900;
+
     margin-top: 8px;
 }
 
-.signal-status {
+.countdown {
+
     text-align: center;
-    font-size: 30px;
-    font-weight: 900;
-    margin-top: 10px;
+
+    font-size: 22px;
+
+    font-weight: 800;
+
+    margin-bottom: 10px;
 }
 
-.feature-box {
+.card {
+
     background: white;
-    padding: 14px;
-    border-radius: 12px;
-    margin: 6px 0;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+
+    border-radius: 18px;
+
+    padding: 18px;
+
+    margin-bottom: 15px;
+
+    box-shadow:
+        0 4px 18px rgba(0,0,0,0.08);
+}
+
+.feature {
+
+    background: white;
+
+    padding: 12px;
+
+    margin: 5px 0;
+
+    border-radius: 10px;
+
     font-weight: 600;
+
+    box-shadow:
+        0 2px 8px rgba(0,0,0,0.05);
 }
 
 .footer {
+
     text-align: center;
+
     padding: 25px;
+
     font-size: 15px;
 }
 
@@ -297,12 +392,16 @@ st.markdown(
 )
 
 st.markdown(
-    '<div class="subtitle">20 FEATURES SMART TRAFFIC CONTROL DASHBOARD</div>',
+    '<div class="subtitle">'
+    '20 FEATURES SMART TRAFFIC CONTROL DASHBOARD'
+    '</div>',
     unsafe_allow_html=True
 )
 
 st.markdown(
-    '<div class="creator">Created By: Rashpreet Kaur Arora</div>',
+    '<div style="text-align:center;font-weight:700;">'
+    'Created By: Rashpreet Kaur Arora'
+    '</div>',
     unsafe_allow_html=True
 )
 
@@ -315,30 +414,14 @@ st.divider()
 
 st.sidebar.title("🚦 Control Panel")
 
-st.sidebar.markdown(
-    "**Traffic Signal Management System**"
-)
-
-st.sidebar.divider()
-
 st.session_state.running = st.sidebar.toggle(
-    "Automatic Signal Mode",
+    "Automatic Signal",
     value=st.session_state.running
 )
 
-st.session_state.manual_mode = st.sidebar.toggle(
-    "Manual Control",
-    value=st.session_state.manual_mode
-)
-
-st.session_state.night_mode = st.sidebar.toggle(
-    "🌙 Night Traffic Mode",
-    value=st.session_state.night_mode
-)
-
-st.session_state.school_zone = st.sidebar.toggle(
-    "🏫 School Zone Mode",
-    value=st.session_state.school_zone
+st.session_state.emergency = st.sidebar.toggle(
+    "🚑 Emergency Mode",
+    value=st.session_state.emergency
 )
 
 st.session_state.pedestrian = st.sidebar.toggle(
@@ -346,186 +429,136 @@ st.session_state.pedestrian = st.sidebar.toggle(
     value=st.session_state.pedestrian
 )
 
-st.session_state.emergency = st.sidebar.toggle(
-    "🚑 Emergency Vehicle",
-    value=st.session_state.emergency
+st.session_state.school_zone = st.sidebar.toggle(
+    "🏫 School Zone",
+    value=st.session_state.school_zone
+)
+
+st.session_state.night_mode = st.sidebar.toggle(
+    "🌙 Night Mode",
+    value=st.session_state.night_mode
 )
 
 st.sidebar.divider()
 
-st.sidebar.subheader("Traffic Simulation")
-
 st.session_state.vehicle_count = st.sidebar.slider(
-    "Vehicles Detected",
-    min_value=0,
-    max_value=150,
-    value=st.session_state.vehicle_count
+    "🚗 Vehicles Detected",
+    0,
+    150,
+    st.session_state.vehicle_count
 )
 
-if st.sidebar.button(
-    "🎲 Random Traffic",
-    use_container_width=True
-):
+if st.sidebar.button("🎲 Random Traffic", use_container_width=True):
+
     st.session_state.vehicle_count = random.randint(5, 150)
 
-if st.sidebar.button(
-    "🔄 Reset System",
-    use_container_width=True
-):
+    st.rerun()
+
+if st.sidebar.button("🔄 Reset", use_container_width=True):
+
     st.session_state.signal = "RED"
-    st.session_state.running = True
     st.session_state.last_change = time.time()
     st.session_state.vehicle_count = 45
     st.session_state.emergency = False
-    st.session_state.accident = False
-    st.session_state.wrong_way = False
+    st.session_state.pedestrian = False
+
+    st.rerun()
 
 
 # ============================================================
-# ADAPTIVE TRAFFIC LOGIC
+# MAIN LAYOUT
 # ============================================================
 
-adaptive_timing()
-
-density = calculate_density()
+left, center, right = st.columns([1, 1.3, 1])
 
 
 # ============================================================
-# EMERGENCY MODE
-# ============================================================
-
-if st.session_state.emergency:
-
-    st.session_state.signal = "GREEN"
-
-    st.session_state.last_change = time.time()
-
-
-# ============================================================
-# AUTOMATIC SIGNAL TIMER
-# ============================================================
-
-duration = get_duration()
-
-elapsed = int(time.time() - st.session_state.last_change)
-
-remaining = max(duration - elapsed, 0)
-
-if (
-    st.session_state.running
-    and not st.session_state.manual_mode
-    and not st.session_state.emergency
-):
-
-    if remaining <= 0:
-        next_signal()
-        st.rerun()
-
-
-# ============================================================
-# MAIN DASHBOARD
-# ============================================================
-
-left, middle, right = st.columns([1, 1.2, 1])
-
-
-# ============================================================
-# LEFT PANEL
+# LEFT
 # ============================================================
 
 with left:
 
     st.markdown(
-        '<div class="dashboard-card">',
+        '<div class="card">',
         unsafe_allow_html=True
     )
 
     st.subheader("📊 Traffic Information")
 
-    st.metric(
-        "🚗 Vehicles",
-        st.session_state.vehicle_count
-    )
+    count = st.session_state.vehicle_count
 
-    st.metric(
-        "Traffic Density",
-        density
-    )
+    if count < 30:
+        density = "LOW"
+
+    elif count < 70:
+        density = "MEDIUM"
+
+    else:
+        density = "HIGH"
+
+    st.metric("🚗 Vehicles", count)
+
+    st.metric("Traffic Density", density)
 
     st.metric(
         "Current Signal",
         st.session_state.signal
     )
 
-    st.metric(
-        "Signal Timer",
-        f"{remaining} sec"
-    )
-
     st.markdown(
-        "</div>",
+        '</div>',
         unsafe_allow_html=True
     )
 
 
 # ============================================================
-# CENTER TRAFFIC LIGHT
+# CENTER - TRAFFIC LIGHT
 # ============================================================
 
-with middle:
-
-    st.subheader("🚦 Live Traffic Signal")
-
-    red_class = (
-        "traffic-light red-active"
-        if st.session_state.signal == "RED"
-        else "traffic-light"
-    )
-
-    yellow_class = (
-        "traffic-light yellow-active"
-        if st.session_state.signal == "YELLOW"
-        else "traffic-light"
-    )
-
-    green_class = (
-        "traffic-light green-active"
-        if st.session_state.signal == "GREEN"
-        else "traffic-light"
-    )
-
-    signal_html = f"""
-
-    <div class="traffic-body">
-
-        <div class="{red_class}"></div>
-
-        <div class="{yellow_class}"></div>
-
-        <div class="{green_class}"></div>
-
-        <div class="signal-name">
-            TRAFFIC SIGNAL
-        </div>
-
-    </div>
-
-    <div class="signal-status">
-        {signal_color()}
-    </div>
-
-    """
+with center:
 
     st.markdown(
-        signal_html,
+        """
+        <div style="
+        text-align:center;
+        font-size:24px;
+        font-weight:900;">
+        🚦 LIVE TRAFFIC SIGNAL
+        </div>
+        """,
         unsafe_allow_html=True
     )
 
     st.markdown(
         f"""
-        <div style="text-align:center;
-                    font-size:24px;
-                    font-weight:800;">
+        <div class="traffic-container">
+
+            <div class="traffic-box">
+
+                <div class="light {red_active}">
+                    <div class="circle red">●</div>
+                    <div class="light-name">RED</div>
+                </div>
+
+                <div class="light {yellow_active}">
+                    <div class="circle yellow">●</div>
+                    <div class="light-name">YELLOW</div>
+                </div>
+
+                <div class="light {green_active}">
+                    <div class="circle green">●</div>
+                    <div class="light-name">GREEN</div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="signal-status">
+            {st.session_state.signal}
+        </div>
+
+        <div class="countdown">
             ⏱️ {remaining} seconds
         </div>
         """,
@@ -534,302 +567,199 @@ with middle:
 
 
 # ============================================================
-# RIGHT CONTROL PANEL
+# RIGHT - MANUAL CONTROL
 # ============================================================
 
 with right:
 
     st.markdown(
-        '<div class="dashboard-card">',
+        '<div class="card">',
         unsafe_allow_html=True
     )
 
-    st.subheader("🎛️ Signal Controls")
+    st.subheader("🎛️ Signal Control")
 
     if st.button(
         "🔴 RED",
         use_container_width=True
     ):
+
         st.session_state.signal = "RED"
         st.session_state.last_change = time.time()
+
         st.rerun()
 
     if st.button(
         "🟡 YELLOW",
         use_container_width=True
     ):
+
         st.session_state.signal = "YELLOW"
         st.session_state.last_change = time.time()
+
         st.rerun()
 
     if st.button(
         "🟢 GREEN",
         use_container_width=True
     ):
+
         st.session_state.signal = "GREEN"
         st.session_state.last_change = time.time()
+
         st.rerun()
 
     if st.button(
-        "🔄 Next Signal",
+        "🔄 NEXT SIGNAL",
         use_container_width=True
     ):
+
         next_signal()
+
         st.rerun()
 
     st.markdown(
-        "</div>",
+        '</div>',
         unsafe_allow_html=True
     )
 
 
 # ============================================================
-# STATUS
+# SYSTEM STATUS
 # ============================================================
 
 st.divider()
 
-st.subheader("🛰️ System Status")
+st.header("🛰️ System Status")
 
-status1, status2, status3, status4 = st.columns(4)
+a, b, c, d = st.columns(4)
 
-with status1:
+with a:
 
     if st.session_state.running:
-        st.success("System Running")
+        st.success("SYSTEM RUNNING")
     else:
-        st.warning("System Paused")
+        st.warning("SYSTEM PAUSED")
 
-with status2:
+with b:
 
     if st.session_state.emergency:
-        st.error("Emergency Mode")
+        st.error("EMERGENCY ACTIVE")
     else:
-        st.success("Normal Mode")
+        st.success("NORMAL MODE")
 
-with status3:
+with c:
 
     if density == "HIGH":
-        st.error("High Traffic")
-    elif density == "MEDIUM":
-        st.warning("Medium Traffic")
-    else:
-        st.success("Low Traffic")
+        st.error("HIGH TRAFFIC")
 
-with status4:
+    elif density == "MEDIUM":
+        st.warning("MEDIUM TRAFFIC")
+
+    else:
+        st.success("LOW TRAFFIC")
+
+with d:
 
     if st.session_state.pedestrian:
-        st.warning("Pedestrian Active")
+        st.warning("PEDESTRIAN ACTIVE")
     else:
-        st.success("Pedestrian Clear")
+        st.success("ROAD CLEAR")
 
 
 # ============================================================
-# SMART TRAFFIC ANALYSIS
+# SMART ANALYSIS
 # ============================================================
 
 st.divider()
 
 st.header("🤖 Smart Traffic Analysis")
 
-analysis_col1, analysis_col2 = st.columns(2)
+x, y = st.columns(2)
 
-with analysis_col1:
+with x:
 
     st.markdown(
-        '<div class="dashboard-card">',
+        '<div class="card">',
         unsafe_allow_html=True
     )
 
     st.subheader("📈 Traffic Analysis")
 
+    st.write(
+        f"Vehicles detected: **{count}**"
+    )
+
+    st.write(
+        f"Traffic density: **{density}**"
+    )
+
     if density == "HIGH":
 
         st.error(
             "High traffic detected. "
-            "Adaptive green time has been increased."
+            "Green signal duration should be increased."
         )
 
     elif density == "MEDIUM":
 
         st.warning(
             "Medium traffic detected. "
-            "Normal adaptive timing is active."
+            "Adaptive timing is recommended."
         )
 
     else:
 
         st.success(
             "Low traffic detected. "
-            "Signal timing has been reduced."
+            "Normal signal timing is sufficient."
         )
 
-    st.write(
-        f"Detected vehicles: **{st.session_state.vehicle_count}**"
-    )
-
-    st.write(
-        f"Recommended green time: "
-        f"**{st.session_state.green_time} seconds**"
-    )
-
     st.markdown(
-        "</div>",
+        '</div>',
         unsafe_allow_html=True
     )
 
 
-with analysis_col2:
+with y:
 
     st.markdown(
-        '<div class="dashboard-card">',
+        '<div class="card">',
         unsafe_allow_html=True
     )
 
-    st.subheader("🧠 AI Recommendation")
+    st.subheader("🧠 Intelligent Recommendation")
 
     if st.session_state.emergency:
 
         st.info(
-            "Emergency vehicle detected. "
-            "GREEN priority is recommended."
+            "Emergency vehicle priority active. "
+            "GREEN signal is recommended."
+        )
+
+    elif st.session_state.pedestrian:
+
+        st.info(
+            "Pedestrian crossing active. "
+            "Vehicle movement should be controlled."
         )
 
     elif density == "HIGH":
 
         st.info(
-            "Increase green signal duration "
-            "to reduce congestion."
-        )
-
-    elif density == "MEDIUM":
-
-        st.info(
-            "Maintain adaptive signal timing."
+            "Heavy congestion detected. "
+            "Extend GREEN phase."
         )
 
     else:
 
         st.info(
-            "Shorter signal cycles are recommended."
+            "Traffic conditions are normal."
         )
 
     st.markdown(
-        "</div>",
+        '</div>',
         unsafe_allow_html=True
-    )
-
-
-# ============================================================
-# EMERGENCY MANAGEMENT
-# ============================================================
-
-st.divider()
-
-st.header("🚨 Emergency & Incident Management")
-
-e1, e2, e3 = st.columns(3)
-
-with e1:
-
-    st.session_state.accident = st.checkbox(
-        "🚑 Accident Detected",
-        value=st.session_state.accident
-    )
-
-with e2:
-
-    st.session_state.wrong_way = st.checkbox(
-        "⚠️ Wrong-Way Vehicle",
-        value=st.session_state.wrong_way
-    )
-
-with e3:
-
-    if st.session_state.emergency:
-        st.error("🚨 Emergency Priority ACTIVE")
-    else:
-        st.success("Normal Traffic Priority")
-
-
-if st.session_state.accident:
-
-    st.error(
-        "ACCIDENT ALERT: Traffic management "
-        "team should be notified."
-    )
-
-if st.session_state.wrong_way:
-
-    st.warning(
-        "WRONG-WAY ALERT: Vehicle movement "
-        "requires monitoring."
-    )
-
-
-# ============================================================
-# PEDESTRIAN CROSSING
-# ============================================================
-
-st.divider()
-
-st.header("🚶 Pedestrian Crossing Management")
-
-if st.session_state.pedestrian:
-
-    st.warning(
-        "Pedestrian crossing is ACTIVE. "
-        "Vehicles should remain stopped."
-    )
-
-else:
-
-    st.success(
-        "Pedestrian crossing is CLEAR."
-    )
-
-
-# ============================================================
-# SCHOOL ZONE
-# ============================================================
-
-st.divider()
-
-st.header("🏫 School Zone Traffic Control")
-
-if st.session_state.school_zone:
-
-    st.warning(
-        "School Zone Mode ACTIVE — "
-        "reduced traffic speed recommended."
-    )
-
-else:
-
-    st.success(
-        "School Zone Mode is currently OFF."
-    )
-
-
-# ============================================================
-# NIGHT MODE
-# ============================================================
-
-st.divider()
-
-st.header("🌙 Night Traffic Management")
-
-if st.session_state.night_mode:
-
-    st.info(
-        "Night Mode ACTIVE — "
-        "low-traffic signal strategy enabled."
-    )
-
-else:
-
-    st.success(
-        "Day Traffic Mode ACTIVE."
     )
 
 
@@ -866,48 +796,35 @@ features = [
 
 ]
 
-feature_col1, feature_col2 = st.columns(2)
+f1, f2 = st.columns(2)
 
-for index, feature in enumerate(features):
+for i, feature in enumerate(features):
 
-    if index < 10:
+    if i < 10:
 
-        with feature_col1:
+        with f1:
 
             st.markdown(
-                f'<div class="feature-box">'
-                f'✅ {index + 1}. {feature}'
-                f'</div>',
+                f"""
+                <div class="feature">
+                ✅ {i + 1}. {feature}
+                </div>
+                """,
                 unsafe_allow_html=True
             )
 
     else:
 
-        with feature_col2:
+        with f2:
 
             st.markdown(
-                f'<div class="feature-box">'
-                f'✅ {index + 1}. {feature}'
-                f'</div>',
+                f"""
+                <div class="feature">
+                ✅ {i + 1}. {feature}
+                </div>
+                """,
                 unsafe_allow_html=True
             )
-
-
-# ============================================================
-# TRAFFIC STATISTICS
-# ============================================================
-
-st.divider()
-
-st.header("📊 Traffic Statistics")
-
-chart_data = {
-    "Red": st.session_state.red_time,
-    "Yellow": st.session_state.yellow_time,
-    "Green": st.session_state.green_time
-}
-
-st.bar_chart(chart_data)
 
 
 # ============================================================
@@ -918,43 +835,22 @@ st.divider()
 
 st.header("📋 Project Information")
 
-info1, info2, info3 = st.columns(3)
+p1, p2, p3 = st.columns(3)
 
-with info1:
+with p1:
 
-    st.markdown(
-        """
-        **Project:**  
-        Traffic Signal Management System
+    st.write("**Project**")
+    st.write("Traffic Signal Management System")
 
-        **Technology:**  
-        Python + Streamlit
-        """
-    )
+with p2:
 
-with info2:
+    st.write("**Technology**")
+    st.write("Python + Streamlit")
 
-    st.markdown(
-        """
-        **Hardware:**  
-        Not Required
+with p3:
 
-        **Features:**  
-        20
-        """
-    )
-
-with info3:
-
-    st.markdown(
-        """
-        **Developer:**  
-        Rashpreet Kaur Arora
-
-        **Application:**  
-        Smart Traffic Dashboard
-        """
-    )
+    st.write("**Hardware**")
+    st.write("Not Required")
 
 
 # ============================================================
@@ -966,9 +862,13 @@ st.divider()
 st.markdown(
     """
     <div class="footer">
-        🚦 <b>Traffic Signal Management System</b><br>
-        20 Features Smart Traffic Control Project<br><br>
-        Created By: <b>Rashpreet Kaur Arora</b>
+
+    🚦 <b>Traffic Signal Management System</b><br>
+
+    20 Features Smart Traffic Control Project<br>
+
+    Created By: <b>Rashpreet Kaur Arora</b>
+
     </div>
     """,
     unsafe_allow_html=True
@@ -979,7 +879,7 @@ st.markdown(
 # AUTO REFRESH
 # ============================================================
 
-if st.session_state.running and not st.session_state.manual_mode:
+if st.session_state.running:
 
     time.sleep(1)
 
