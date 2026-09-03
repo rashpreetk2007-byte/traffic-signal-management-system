@@ -20,23 +20,32 @@ st.set_page_config(
 # SESSION STATE
 # ============================================================
 
-defaults = {
-    "signal": "RED",
-    "signal_start": time.time(),
-    "vehicles": 45,
-    "automatic": True,
-    "emergency": False,
-    "pedestrian": False,
-    "school_zone": False,
-    "night_mode": False
-}
+if "signal" not in st.session_state:
+    st.session_state.signal = "RED"
 
-for key, value in defaults.items():
-    if key not in st.session_state:
-        st.session_state[key] = value
+if "signal_start" not in st.session_state:
+    st.session_state.signal_start = time.time()
+
+if "vehicles" not in st.session_state:
+    st.session_state.vehicles = 45
+
+if "automatic" not in st.session_state:
+    st.session_state.automatic = True
+
+if "emergency" not in st.session_state:
+    st.session_state.emergency = False
+
+if "pedestrian" not in st.session_state:
+    st.session_state.pedestrian = False
+
+if "school_zone" not in st.session_state:
+    st.session_state.school_zone = False
+
+if "night_mode" not in st.session_state:
+    st.session_state.night_mode = False
 
 # ============================================================
-# CSS
+# PAGE CSS
 # ============================================================
 
 st.markdown("""
@@ -44,10 +53,10 @@ st.markdown("""
 
 .main-title {
     text-align: center;
-    background: linear-gradient(135deg, #111827, #374151);
-    color: white;
     padding: 22px;
     border-radius: 18px;
+    background: linear-gradient(135deg, #111827, #374151);
+    color: white;
     margin-bottom: 25px;
 }
 
@@ -57,111 +66,99 @@ st.markdown("""
 }
 
 .main-title p {
-    margin: 7px 0;
+    margin: 7px;
 }
 
-.info-card {
+.card {
     background: #f8fafc;
     border: 1px solid #e5e7eb;
     border-radius: 15px;
     padding: 18px;
     text-align: center;
-    min-height: 120px;
+    min-height: 115px;
 }
 
-.info-icon {
+.card-icon {
     font-size: 28px;
 }
 
-.info-number {
-    font-size: 28px;
+.card-value {
+    font-size: 27px;
     font-weight: bold;
 }
 
-.info-label {
-    font-size: 14px;
+.card-label {
     color: #555;
+    font-size: 14px;
 }
 
-.signal-container {
-    display: flex;
-    justify-content: center;
-    margin: 25px 0;
+.traffic-housing {
+    background: #080808;
+    width: 210px;
+    margin: 20px auto;
+    padding: 25px 15px;
+    border-radius: 38px;
+    border: 8px solid #303030;
+    box-shadow:
+        0 12px 30px rgba(0,0,0,0.45),
+        inset 0 0 15px rgba(255,255,255,0.04);
 }
 
-.signal-body {
-    background: #101010;
-    border: 7px solid #333333;
-    border-radius: 32px;
-    padding: 20px 22px 25px 22px;
-    width: 190px;
-    box-shadow: 0 12px 30px rgba(0,0,0,0.35);
-}
-
-.signal-light {
+.blank-light {
     width: 105px;
     height: 105px;
+    margin: 16px auto;
     border-radius: 50%;
-    margin: 12px auto;
-    border: 5px solid #444;
-    background: #252525;
+    background: #202020;
+    border: 5px solid #454545;
 }
 
-.red-on {
-    background: #ff0000;
+.red-light {
+    background: #ff1111;
     box-shadow:
-        0 0 15px #ff0000,
-        0 0 35px #ff0000,
-        0 0 65px #ff0000;
+        0 0 15px #ff1111,
+        0 0 35px #ff1111,
+        0 0 60px #ff1111;
 }
 
-.yellow-on {
-    background: #ffd000;
+.yellow-light {
+    background: #ffd21a;
     box-shadow:
-        0 0 15px #ffd000,
-        0 0 35px #ffd000,
-        0 0 65px #ffd000;
+        0 0 15px #ffd21a,
+        0 0 35px #ffd21a,
+        0 0 60px #ffd21a;
 }
 
-.green-on {
-    background: #00d94f;
+.green-light {
+    background: #16e35a;
     box-shadow:
-        0 0 15px #00d94f,
-        0 0 35px #00d94f,
-        0 0 65px #00d94f;
+        0 0 15px #16e35a,
+        0 0 35px #16e35a,
+        0 0 60px #16e35a;
 }
 
-.signal-name {
+.light-label {
     color: white;
     text-align: center;
-    font-weight: bold;
     font-size: 13px;
-    margin-bottom: 10px;
-}
-
-.status-box {
-    padding: 15px;
-    border-radius: 12px;
-    text-align: center;
     font-weight: bold;
-    border: 1px solid #ddd;
 }
 
 .feature {
+    padding: 11px 15px;
+    margin: 6px 0;
+    border-radius: 10px;
     background: #f8fafc;
     border: 1px solid #e5e7eb;
-    padding: 11px 15px;
-    margin: 7px 0;
-    border-radius: 10px;
 }
 
 .footer {
-    margin-top: 30px;
     background: #111827;
     color: white;
     text-align: center;
     padding: 22px;
     border-radius: 15px;
+    margin-top: 30px;
 }
 
 </style>
@@ -216,13 +213,16 @@ st.sidebar.subheader("🚗 Vehicle Detection")
 
 st.session_state.vehicles = st.sidebar.slider(
     "Vehicles Detected",
-    0,
-    150,
-    st.session_state.vehicles
+    min_value=0,
+    max_value=150,
+    value=st.session_state.vehicles
 )
 
-st.sidebar.markdown("---")
+# ============================================================
+# MANUAL SIGNAL BUTTONS
+# ============================================================
 
+st.sidebar.markdown("---")
 st.sidebar.subheader("🎛️ Manual Signal Control")
 
 if st.sidebar.button("🔴 RED", use_container_width=True):
@@ -257,22 +257,24 @@ else:
     density = "HIGH"
 
 # ============================================================
-# SIGNAL TIMING
+# SIGNAL TIMER
 # ============================================================
 
 if st.session_state.signal == "RED":
     duration = 10
+
 elif st.session_state.signal == "YELLOW":
     duration = 5
+
 else:
     duration = 10
 
-# Emergency mode
 if st.session_state.emergency:
     st.session_state.signal = "GREEN"
     duration = 15
 
 elapsed = int(time.time() - st.session_state.signal_start)
+
 remaining = max(0, duration - elapsed)
 
 # ============================================================
@@ -299,15 +301,17 @@ if st.session_state.automatic and not st.session_state.emergency:
 # INFORMATION CARDS
 # ============================================================
 
+st.markdown("## 📊 Traffic Information")
+
 c1, c2, c3, c4 = st.columns(4)
 
 with c1:
     st.markdown(
         f"""
-        <div class="info-card">
-            <div class="info-icon">🚗</div>
-            <div class="info-number">{vehicles}</div>
-            <div class="info-label">Vehicles</div>
+        <div class="card">
+            <div class="card-icon">🚗</div>
+            <div class="card-value">{vehicles}</div>
+            <div class="card-label">Vehicles</div>
         </div>
         """,
         unsafe_allow_html=True
@@ -316,10 +320,10 @@ with c1:
 with c2:
     st.markdown(
         f"""
-        <div class="info-card">
-            <div class="info-icon">📊</div>
-            <div class="info-number">{density}</div>
-            <div class="info-label">Traffic Density</div>
+        <div class="card">
+            <div class="card-icon">📊</div>
+            <div class="card-value">{density}</div>
+            <div class="card-label">Traffic Density</div>
         </div>
         """,
         unsafe_allow_html=True
@@ -328,10 +332,10 @@ with c2:
 with c3:
     st.markdown(
         f"""
-        <div class="info-card">
-            <div class="info-icon">🚦</div>
-            <div class="info-number">{st.session_state.signal}</div>
-            <div class="info-label">Current Signal</div>
+        <div class="card">
+            <div class="card-icon">🚦</div>
+            <div class="card-value">{st.session_state.signal}</div>
+            <div class="card-label">Current Signal</div>
         </div>
         """,
         unsafe_allow_html=True
@@ -340,42 +344,40 @@ with c3:
 with c4:
     st.markdown(
         f"""
-        <div class="info-card">
-            <div class="info-icon">⏱️</div>
-            <div class="info-number">{remaining}</div>
-            <div class="info-label">Seconds</div>
+        <div class="card">
+            <div class="card-icon">⏱️</div>
+            <div class="card-value">{remaining}</div>
+            <div class="card-label">Seconds</div>
         </div>
         """,
         unsafe_allow_html=True
     )
 
 # ============================================================
-# LIVE TRAFFIC SIGNAL
+# TRAFFIC LIGHT
 # ============================================================
 
 st.markdown("## 🚦 LIVE TRAFFIC SIGNAL")
 
 signal = st.session_state.signal
 
-red_class = "red-on" if signal == "RED" else ""
-yellow_class = "yellow-on" if signal == "YELLOW" else ""
-green_class = "green-on" if signal == "GREEN" else ""
+red_class = "red-light" if signal == "RED" else "blank-light"
+yellow_class = "yellow-light" if signal == "YELLOW" else "blank-light"
+green_class = "green-light" if signal == "GREEN" else "blank-light"
 
 st.markdown(
     f"""
-    <div class="signal-container">
-        <div class="signal-body">
+    <div class="traffic-housing">
 
-            <div class="signal-light {red_class}"></div>
-            <div class="signal-name">RED</div>
+        <div class="signal-light {red_class}"></div>
+        <div class="light-label">RED</div>
 
-            <div class="signal-light {yellow_class}"></div>
-            <div class="signal-name">YELLOW</div>
+        <div class="signal-light {yellow_class}"></div>
+        <div class="light-label">YELLOW</div>
 
-            <div class="signal-light {green_class}"></div>
-            <div class="signal-name">GREEN</div>
+        <div class="signal-light {green_class}"></div>
+        <div class="light-label">GREEN</div>
 
-        </div>
     </div>
     """,
     unsafe_allow_html=True
@@ -390,6 +392,35 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
+# ============================================================
+# SIGNAL CONTROL BUTTONS ON MAIN PAGE
+# ============================================================
+
+st.markdown("### 🎛️ Quick Signal Control")
+
+b1, b2, b3 = st.columns(3)
+
+with b1:
+    if st.button("🔴 RED SIGNAL", use_container_width=True):
+        st.session_state.signal = "RED"
+        st.session_state.signal_start = time.time()
+        st.session_state.automatic = False
+        st.rerun()
+
+with b2:
+    if st.button("🟡 YELLOW SIGNAL", use_container_width=True):
+        st.session_state.signal = "YELLOW"
+        st.session_state.signal_start = time.time()
+        st.session_state.automatic = False
+        st.rerun()
+
+with b3:
+    if st.button("🟢 GREEN SIGNAL", use_container_width=True):
+        st.session_state.signal = "GREEN"
+        st.session_state.signal_start = time.time()
+        st.session_state.automatic = False
+        st.rerun()
 
 # ============================================================
 # SYSTEM STATUS
@@ -423,7 +454,7 @@ with s4:
         st.success("ROAD CLEAR")
 
 # ============================================================
-# SPECIAL MODES
+# ACTIVE MODES
 # ============================================================
 
 st.markdown("## ⚙️ Active Modes")
@@ -431,38 +462,39 @@ st.markdown("## ⚙️ Active Modes")
 m1, m2, m3, m4 = st.columns(4)
 
 with m1:
-    if st.session_state.emergency:
-        st.error("🚑 EMERGENCY ACTIVE")
-    else:
-        st.success("NORMAL EMERGENCY MODE")
+    st.write(
+        "🚑 Emergency:",
+        "ACTIVE" if st.session_state.emergency else "OFF"
+    )
 
 with m2:
-    if st.session_state.pedestrian:
-        st.warning("🚶 CROSSING ACTIVE")
-    else:
-        st.success("PEDESTRIAN NORMAL")
+    st.write(
+        "🚶 Pedestrian:",
+        "ACTIVE" if st.session_state.pedestrian else "OFF"
+    )
 
 with m3:
-    if st.session_state.school_zone:
-        st.warning("🏫 SCHOOL ZONE ACTIVE")
-    else:
-        st.success("NORMAL ZONE")
+    st.write(
+        "🏫 School Zone:",
+        "ACTIVE" if st.session_state.school_zone else "OFF"
+    )
 
 with m4:
-    if st.session_state.night_mode:
-        st.info("🌙 NIGHT MODE ACTIVE")
-    else:
-        st.success("☀️ DAY MODE")
+    st.write(
+        "🌙 Night Mode:",
+        "ACTIVE" if st.session_state.night_mode else "OFF"
+    )
 
 # ============================================================
-# SMART TRAFFIC ANALYSIS
+# AI TRAFFIC ANALYSIS
 # ============================================================
 
-st.markdown("## 🤖 Smart Traffic Analysis")
+st.markdown("## 🤖 AI Traffic Analysis")
 
-a1, a2 = st.columns(2)
+ai1, ai2 = st.columns(2)
 
-with a1:
+with ai1:
+
     st.markdown("### 📈 Traffic Analysis")
 
     st.write(f"**Vehicles detected:** {vehicles}")
@@ -470,88 +502,65 @@ with a1:
     st.write(f"**Current signal:** {signal}")
 
     if density == "HIGH":
+
         st.error(
             "High traffic detected. Extended GREEN signal timing is recommended."
         )
 
     elif density == "MEDIUM":
+
         st.warning(
-            "Medium traffic detected. Adaptive timing is recommended."
+            "Medium traffic detected. Adaptive signal timing is recommended."
         )
 
     else:
+
         st.success(
             "Low traffic detected. Normal signal timing is sufficient."
         )
 
-with a2:
+with ai2:
+
     st.markdown("### 🧠 Intelligent Recommendation")
 
     if st.session_state.emergency:
+
         st.error(
             "🚑 Emergency priority activated. GREEN signal assigned."
         )
 
     elif st.session_state.pedestrian:
+
         st.warning(
-            "🚶 Pedestrian crossing is currently active."
+            "🚶 Pedestrian crossing is active."
         )
 
     elif st.session_state.school_zone:
+
         st.warning(
-            "🏫 School zone mode is active. Drive carefully."
+            "🏫 School zone mode is active. Reduced-speed traffic control recommended."
         )
 
     elif density == "HIGH":
+
         st.info(
-            "🚗 Increase GREEN duration to reduce congestion."
+            "🚗 AI recommendation: Increase GREEN duration to reduce congestion."
         )
 
     elif density == "MEDIUM":
+
         st.info(
-            "⚙️ Use adaptive signal timing."
+            "⚙️ AI recommendation: Use adaptive signal timing."
         )
 
     else:
+
         st.success(
-            "✅ Traffic conditions are normal."
+            "✅ AI recommendation: Normal signal timing."
         )
 
 # ============================================================
-# TRAFFIC STATISTICS
-# ============================================================
-
-st.markdown("## 📊 Traffic Statistics")
-
-stat1, stat2, stat3 = st.columns(3)
-
-with stat1:
-    st.metric(
-        "Vehicles Detected",
-        vehicles
-    )
-
-with stat2:
-    if density == "HIGH":
-        recommendation = "Extended"
-    elif density == "MEDIUM":
-        recommendation = "Adaptive"
-    else:
-        recommendation = "Normal"
-
-    st.metric(
-        "Signal Timing",
-        recommendation
-    )
-
-with stat3:
-    st.metric(
-        "Current Signal",
-        signal
-    )
-
-# ============================================================
-# 20 SMART FEATURES
+# 20 FEATURES
 # ============================================================
 
 st.markdown("## 🧠 20 Smart Traffic Features")
@@ -579,11 +588,12 @@ features = [
     "Traffic Management Dashboard"
 ]
 
-for number, feature in enumerate(features, 1):
+for i, feature in enumerate(features, 1):
+
     st.markdown(
         f"""
         <div class="feature">
-            ✅ <b>{number}.</b> {feature}
+            ✅ <b>{i}.</b> {feature}
         </div>
         """,
         unsafe_allow_html=True
